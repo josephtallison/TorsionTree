@@ -3,6 +3,10 @@ import numpy as np
 from numpy import linalg as la
 
 class Torsion:
+    """Creates torsion object that stores the atoms involved in the torsion as
+    well as the angle that the torsion will be rotated to.  This class can also
+    compute the current angle of the torsion
+    """
     def __init__(self,tor_atoms):
         self.tor_atoms = tor_atoms
         self.newAngle = None
@@ -39,7 +43,11 @@ class Torsion:
         return angle
         
 class TorsionCombination:
+    """Stores all information regarding the combination of torsions (conformer)
+    including the combination itself, the single point energy, and minimized
+    energy
+    """
     def __init__(self,combination):
         self.combination = combination
-        self.minCombination = None
+        self.min_energy = None
         self.energy = None
