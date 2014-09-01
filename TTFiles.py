@@ -3,6 +3,9 @@ from TTAtom import Atom
 import csv
 
 def get_xyz(filename):
+    """Given an Tinker XYZ coordinate file, this function will extract all of
+    the information and place it all within an Atom object.
+    """
     atoms = []
     count = 0
     for line in csv.reader(open(filename), delimiter=" ",
@@ -21,6 +24,9 @@ def get_xyz(filename):
     return atoms
 
 def write_xyz(atoms,filename):
+    """Will write a Tinker XYZ coordinate file named "filename" based on the 
+    information stored within each Atom class within the atoms array
+    """
     outfile = open(filename,"w")
     outfile.write("%6s" % len(atoms)+"\n")
     for atom in atoms:
