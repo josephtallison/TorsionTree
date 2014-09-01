@@ -124,11 +124,7 @@ def check_deltaPhi(deltaPhi):
     if (360%deltaPhi != 0):
         status = False
     return status
-
-
-
-
-
+    
 def assign_rotating_atoms(atom1,atom2,atoms):
     """
     Defines which atoms need to be rotated (atom1-->atom2 defines 
@@ -235,6 +231,17 @@ def create_possible_torsions(deltaPhi):
 def generate_torsion_combinations(possibleTorsions,size):
     for combination in it.product(possibleTorsions,repeat=size):
         yield TorsionCombination(combination) 
+        
+def make_filename(torComb,name):
+    for i in torComb.combination:
+        if i < 0:
+            lead = "n"
+        else:
+            lead = ""
+        frag = lead + str("%0.0f" % abs(i))
+        name = name + "_" + frag
+    name = name + ".xyz"
+    return name
     
 def parallel_wrapper(torComb):
     #Set angle in torsions object
@@ -259,14 +266,9 @@ def parallel_wrapper(torComb):
     #Check if atoms are too close together
     if check_close_contacts(atoms):
         return
-    name = "new_octane_"
-    for i in torComb.combination:
-        name = name + str(i) + "_"
-    name = name + ".xyz"
+    name = "new_octane"
+    name = make_filename(torComb,name)
     write_xyz(atoms,name)
-
-
-
 
 if __name__ == '__main__':
     #SET UP DATASTRUCTURES    
