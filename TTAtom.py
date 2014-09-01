@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 class Atom:
     def __init__(self,n,x,y,z,atomType,connectivity):
         self.n = n
