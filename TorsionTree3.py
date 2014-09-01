@@ -90,9 +90,8 @@ def check_redundancy(bondList,bond):
     return False
         
 def assign_torsions(atoms):
-    """
-    First define the non-hydrogen participating bonds then check for any non-
-    hydrogen atoms connected to them.
+    """First define the non-hydrogen participating bonds then check for any 
+    non-hydrogen atoms connected to them.
     """
     #Define central bond first
     torsions = []
@@ -120,16 +119,16 @@ def assign_torsions(atoms):
     return torsions
 
 def check_deltaPhi(deltaPhi):
+    """Makes sure that deltaPhi can divide into 360 evenly.  Returns BOOL."""
     status = True
     if (360%deltaPhi != 0):
         status = False
     return status
     
 def assign_rotating_atoms(atom1,atom2,atoms):
-    """
-    Defines which atoms need to be rotated (atom1-->atom2 defines 
-    which direction in the chain to assign rotatable atoms).  Sets the 
-    atom.rotate logical for use in rotation.
+    """Defines which atoms need to be rotated (atom1-->atom2 defines which 
+    direction in the chain to assign rotatable atoms).  Sets the atom.rotate 
+    logical for use in rotation.
     """      
     atomsToRotate = [atom2]
     for atom in atomsToRotate:
@@ -142,9 +141,7 @@ def assign_rotating_atoms(atom1,atom2,atoms):
                 atomsToRotate.append(connectedAtom)
 
 def prepare_rotation_matrix(rotationVector):
-    """
-    Generates YZ rotation matrix from rotationVector
-    """
+    """Generates YZ rotation matrix from rotationVector."""
     rotationVectorLength = la.norm(rotationVector)
     cost=rotationVector[2]/rotationVectorLength #direction cos z
     sint=np.sqrt(np.abs(1.0-cost**2))
@@ -161,10 +158,10 @@ def prepare_rotation_matrix(rotationVector):
     return YZRotationMat
 
 def rotate_atoms(torsion,atoms):
-    """
-    Rotates all atoms corresponding to the rotation of torsion by rotating the
-    selected atoms into the YZ plane, performing the rotation about the Z axis,
-    then rotating back to its original orientation.
+    """Rotates all atoms corresponding to the rotation of torsion by rotating 
+    the selected atoms into the YZ plane, performing the rotation about the Z 
+    axis, then rotating back to its original orientation.  Sets the x, y, & z
+    coordinates within the atom object.
     """
     #Set up easily read variables
     atom1Coord = np.array([torsion.tor_atoms[1].x,
@@ -209,6 +206,10 @@ def write_xyz(atoms,filename):
         outfile.write(writeLine+"\n")
         
 def check_close_contacts(atoms):
+    """Checks distance between atoms pairwise.  Of the pairwise matrix, only
+    the upper diagonal is evaluated.  Returns True if the atoms are too close,
+    otherwise it will return False.
+    """
     for i in xrange(len(atoms)):
         for j in xrange(i+1,len(atoms)):
             xDif = (atoms[i].x-atoms[j].x)**2
@@ -220,6 +221,9 @@ def check_close_contacts(atoms):
     return False
  
 def create_possible_torsions(deltaPhi):
+    """Given an angle step-size, generates all torsions from 180 to -180 (not
+    including -180.
+    """
     amount = int(360/deltaPhi)
     possibleValues = []
     possibleValue = 180
@@ -243,7 +247,7 @@ def make_filename(torComb,name):
     name = name + ".xyz"
     return name
     
-def parallel_wrapper(torComb):
+def main_wrapper(torComb):
     #Set angle in torsions object
     for i in xrange(len(torsions)):
         torsions[i].newAngle = np.radians(torComb.combination[i])
@@ -257,9 +261,9 @@ def parallel_wrapper(torComb):
                 atom.rotate = False
             
             #Check which atoms need to be rotated & setting atom.rotate
-#            print "rotating: ",torsion.tor_atoms[1].n,torsion.tor_atoms[2].n,torsion.angle,torsion.newAngle
-            assign_rotating_atoms(torsion.tor_atoms[1],torsion.tor_atoms[2],atoms)
-            
+            assign_rotating_atoms(torsion.tor_atoms[1],
+                                  torsion.tor_atoms[2],
+                                  atoms)
             #Rotate atoms
             rotate_atoms(torsion,atoms)
                 
@@ -297,7 +301,7 @@ if __name__ == '__main__':
 
     #PERFORM SEARCH
     #Iterate over every possible combination of torsion angles & minimize
-    sysInfo.pool.map(parallel_wrapper,
+    sysInfo.pool.map(main_wrapper,
                      generate_torsion_combinations(sysInfo.possibleTorsions,
                                                     sysInfo.nTors))
 
