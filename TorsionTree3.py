@@ -4,24 +4,9 @@ from numpy import linalg as la
 import csv
 import itertools as it
 from multiprocessing import Pool
-
-class Atom:
-    def __init__(self,n,x,y,z,atomType,connectivity):
-        self.n = n
-        self.x = x
-        self.y = y
-        self.z = z
-        self.type = atomType
-        self.connectivity = connectivity 
-        self.rotate = False
-        
-class SysInfo:
-    def __init__(self):
-        self.nTors = None
-        self.possibleTors = None
-        self.deltaPhi = None
-        self.deltaPhiStatus = False
-        self.pool = None
+import TTFiles
+import TTAtom
+from TTSysInfo import SysInfo
         
 class Torsion:
     def __init__(self,tor_atoms):
@@ -65,23 +50,6 @@ class TorsionCombination:
         self.minCombination = None
         self.energy = None
                           
-def get_xyz(filename):
-    atoms = []
-    count = 0
-    for line in csv.reader(open(filename), delimiter=" ",
-                           skipinitialspace=True):
-        if count > 0:
-            atoms.append(Atom(
-                              count,
-                              float(line[2]),
-                              float(line[3]),
-                              float(line[4]),
-                              [line[1],int(line[5])],
-                              [a-1 for a in map(int,line[6:])]
-                              )
-                         )
-        count += 1
-    return atoms
     
 def check_redundancy(bondList,bond):
     for checkBond in bondList:
@@ -190,20 +158,6 @@ def rotate_atoms(torsion,atoms):
             atom.x = float(atomToRotateCoord[[0],[0]])
             atom.y = float(atomToRotateCoord[[0],[1]])
             atom.z = float(atomToRotateCoord[[0],[2]])
-            
-def write_xyz(atoms,filename):
-    outfile = open(filename,"w")
-    outfile.write("%6s" % len(atoms)+"\n")
-    for atom in atoms:
-        writeLine = "%6s" % str(atom.n)
-        writeLine = writeLine + "%3s" % atom.type[0]
-        writeLine = writeLine + "%14s" % str("{:.6f}".format(atom.x))
-        writeLine = writeLine + "%12s" % str("{:.6f}".format(atom.y))
-        writeLine = writeLine + "%12s" % str("{:.6f}".format(atom.z))
-        writeLine = writeLine + "%6s" % str(atom.type[1])
-        for connectedAtomIndex in atom.connectivity:
-            writeLine = writeLine + "%6s" % str(connectedAtomIndex+1)
-        outfile.write(writeLine+"\n")
         
 def check_close_contacts(atoms):
     """Checks distance between atoms pairwise.  Of the pairwise matrix, only
@@ -221,8 +175,8 @@ def check_close_contacts(atoms):
     return False
  
 def create_possible_torsions(deltaPhi):
-    """Given an angle step-size, generates all torsions from 180 to -180 (not
-    including -180.
+    """Given an angle step-size, returns a list of all possible torsions from 
+    180 to -180 (not including -180).
     """
     amount = int(360/deltaPhi)
     possibleValues = []
@@ -235,17 +189,6 @@ def create_possible_torsions(deltaPhi):
 def generate_torsion_combinations(possibleTorsions,size):
     for combination in it.product(possibleTorsions,repeat=size):
         yield TorsionCombination(combination) 
-        
-def make_filename(torComb,name):
-    for i in torComb.combination:
-        if i < 0:
-            lead = "n"
-        else:
-            lead = ""
-        frag = lead + str("%0.0f" % abs(i))
-        name = name + "_" + frag
-    name = name + ".xyz"
-    return name
     
 def main_wrapper(torComb):
     #Set angle in torsions object
@@ -271,13 +214,13 @@ def main_wrapper(torComb):
     if check_close_contacts(atoms):
         return
     name = "new_octane"
-    name = make_filename(torComb,name)
-    write_xyz(atoms,name)
+    name = TTFiles.make_filename(torComb,name)
+    TTFiles.write_xyz(atoms,name)
 
 if __name__ == '__main__':
     #SET UP DATASTRUCTURES    
     #Generate an array of atom objects
-    atoms = get_xyz(raw_input("Filename of Tinker XYZ file: "))
+    atoms = TTFiles.get_xyz(raw_input("Filename of Tinker XYZ file: "))
 
     #Generate an array of torsion objects
     torsions = assign_torsions(atoms)    
