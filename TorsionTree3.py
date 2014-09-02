@@ -185,21 +185,31 @@ def main_wrapper(torComb):
         return
         
     #Write file and perform single point analysis
-    TTEnergy.get_single_point_energy(atoms,torComb)
-    print torComb.filename,torComb.energy
+    torComb.filename = "new_octane"
+    name = TTFiles.make_filename(torComb)
+    TTFiles.write_xyz(atoms,torComb.filename)
+    torComb.energy = TTEnergy.get_single_point_energy(torComb.filename)
+    
+    #Check to see if single point energy is above the threshold for minimization
+    if torComb.energy > sysInfo.max_energy():
+        subprocess.Popen(["rm",torComb.filename])
+        return
+    else:
+        print torComb.filename,torComb.energy
         
     
     
 if __name__ == '__main__':
     #SET UP DATASTRUCTURES    
     #Generate an array of atom objects
-    atoms = TTFiles.get_xyz(raw_input("Filename of Tinker XYZ file: "))
+    sysInfo = SysInfo(raw_input("Filename of Tinker XYZ file: "))
+    atoms = TTFiles.get_xyz(sysInfo.startFile)
+    sysInfo.startEnergy = TTEnergy.get_single_point_energy(sysInfo.startFile)
 
     #Generate an array of torsion objects
     torsions = assign_torsions(atoms)    
 
     #Populate system info & list of possible torsion angles
-    sysInfo = SysInfo()
     sysInfo.nTors = len(torsions)
     
     while (not sysInfo.deltaPhiStatus):
