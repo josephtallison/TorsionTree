@@ -161,6 +161,12 @@ def generate_torsion_combinations(possibleTorsions,size):
         yield TTTor.TorsionCombination(combination) 
     
 def main_wrapper(torComb):
+    """Given a conformer (torComb) the structure is rotated to the proper 
+    angles, then written to a file where a single point energy is evaluated.
+    If the energy is below a prescribed value (sysInfo.max_energy), then
+    proceed to a full minimization, where the final structure is then renamed
+    and the results written out to the terminal
+    """
     #Set angle in torsions object
     for i in xrange(len(torsions)):
         torsions[i].newAngle = np.radians(torComb.combination[i])
@@ -207,8 +213,10 @@ def main_wrapper(torComb):
 if __name__ == '__main__':
     #SET UP DATASTRUCTURES    
     #Generate an array of atom objects
-    sysInfo = SysInfo(raw_input("Filename of Tinker XYZ file: "))
+    sysInfo = SysInfo(raw_input("Filename of Tinker XYZ coordinate file: "))
     atoms = TTFiles.get_xyz(sysInfo.startFile)
+    
+    #Evaluate energy of starting structure to obtain a reference point
     sysInfo.startEnergy = TTEnergy.get_single_point_energy(sysInfo.startFile)
 
     #Generate an array of torsion objects
@@ -216,7 +224,6 @@ if __name__ == '__main__':
 
     #Populate system info & list of possible torsion angles
     sysInfo.nTors = len(torsions)
-    
     while (not sysInfo.deltaPhiStatus):
         sysInfo.deltaPhi = float(raw_input("Delta Phi - Angle step size:  "))
         sysInfo.deltaPhiStatus = check_deltaPhi(sysInfo.deltaPhi)
@@ -234,10 +241,13 @@ if __name__ == '__main__':
             print "conformations.  Please provide a larger angle step size." 
             print "--------------------------------------------------------"     
     sysInfo.possibleTorsions = create_possible_torsions(sysInfo.deltaPhi)
-    sysInfo.pool = Pool(6)
+    
+    #Set up multiprocessing parameter
+    sysInfo.pool = Pool(6) #number of processes
 
     #PERFORM SEARCH
     #Iterate over every possible combination of torsion angles & minimize
+    #Utilizes multiprocessor.pool to distribute each conformer evaluation
     sysInfo.pool.map(main_wrapper,
                      generate_torsion_combinations(sysInfo.possibleTorsions,
                                                     sysInfo.nTors))
