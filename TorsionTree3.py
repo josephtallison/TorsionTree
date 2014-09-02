@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import numpy as np
-import os
 from numpy import linalg as la
 import itertools as it
+import subprocess
 from multiprocessing import Pool
 import TTFiles
 import TTAtom
@@ -184,11 +184,17 @@ def main_wrapper(torComb):
         return
         
     #Write file and perform single point analysis
-    name = "new_octane"
-    name = TTFiles.make_filename(torComb,name)
-    TTFiles.write_xyz(atoms,name)
-    
-    
+    torComb.filename = "new_octane"
+    name = TTFiles.make_filename(torComb)
+    TTFiles.write_xyz(atoms,torComb.filename)
+    command = ("$TINKER/analyze "+torComb.filename+
+               " $TINKER/../params/mm3.prm E")
+    output = subprocess.check_output(command,shell=True)
+    output = output.split()
+    for index, out in enumerate(output):
+        if "Potential" in out:
+            torComb.energy = float(output[index+3])
+        
     
     
 if __name__ == '__main__':
@@ -219,8 +225,6 @@ if __name__ == '__main__':
                    sysInfo.numberOfConformers)
             print "conformations.  Please provide a larger angle step size." 
             print "--------------------------------------------------------"     
-    print sysInfo.numberOfConformers
-    exit()
     sysInfo.possibleTorsions = create_possible_torsions(sysInfo.deltaPhi)
     sysInfo.pool = Pool(6)
 
