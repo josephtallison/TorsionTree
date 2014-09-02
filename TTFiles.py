@@ -40,13 +40,12 @@ def write_xyz(atoms,filename):
             writeLine = writeLine + "%6s" % str(connectedAtomIndex+1)
         outfile.write(writeLine+"\n")
         
-def make_filename(torComb,name):
+def make_filename(torComb):
     for i in torComb.combination:
         if i < 0:
             lead = "n"
         else:
             lead = ""
         frag = lead + str("%0.0f" % abs(i))
-        name = name + "_" + frag
-    name = name + ".xyz"
-    return name
+        torComb.filename = torComb.filename + "_" + frag
+    torComb.filename = torComb.filename + ".xyz"

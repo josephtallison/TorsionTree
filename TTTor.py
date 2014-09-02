@@ -51,3 +51,4 @@ class TorsionCombination:
         self.combination = combination
         self.min_energy = None
         self.energy = None
+        self.filename = None

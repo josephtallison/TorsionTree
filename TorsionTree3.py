@@ -201,6 +201,9 @@ def main_wrapper(torComb):
     torComb.min_energy = TTEnergy.get_minimum_energy(torComb.filename)
     print torComb.filename,torComb.min_energy
     
+    #Clean up some files
+    subprocess.Popen(["mv",torComb.filename+"_2",torComb.filename])
+    
 if __name__ == '__main__':
     #SET UP DATASTRUCTURES    
     #Generate an array of atom objects
