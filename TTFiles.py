@@ -39,6 +39,7 @@ def write_xyz(atoms,filename):
         for connectedAtomIndex in atom.connectivity:
             writeLine = writeLine + "%6s" % str(connectedAtomIndex+1)
         outfile.write(writeLine+"\n")
+    outfile.close()
         
 def make_filename(torComb):
     for i in torComb.combination:
