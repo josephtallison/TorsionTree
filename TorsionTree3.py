@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+import os
 from numpy import linalg as la
 import itertools as it
 from multiprocessing import Pool
@@ -49,6 +50,17 @@ def check_deltaPhi(deltaPhi):
     if (360%deltaPhi != 0):
         status = False
     return status
+    
+def check_deltaPhi_amount(sysInfo):
+    """Makes sure that the amount of torsions that would result from the angle
+    step size and the size of the molecule is not above some intractable
+    threshold
+    """
+    amount = (360/sysInfo.deltaPhi)**sysInfo.nTors
+    if amount > 10000:
+        return False,amount
+    else:
+        return True,amount
     
 def assign_rotating_atoms(atom1,atom2,atoms):
     """Defines which atoms need to be rotated (atom1-->atom2 defines which 
@@ -170,10 +182,15 @@ def main_wrapper(torComb):
     #Check if atoms are too close together
     if check_close_contacts(atoms):
         return
+        
+    #Write file and perform single point analysis
     name = "new_octane"
     name = TTFiles.make_filename(torComb,name)
     TTFiles.write_xyz(atoms,name)
-
+    
+    
+    
+    
 if __name__ == '__main__':
     #SET UP DATASTRUCTURES    
     #Generate an array of atom objects
@@ -191,11 +208,19 @@ if __name__ == '__main__':
         sysInfo.deltaPhiStatus = check_deltaPhi(sysInfo.deltaPhi)
         if not sysInfo.deltaPhiStatus:
             print "\n------------------------------------------"
-            print "Delta Phi does not divide evenly into 360."
+            print "Delta phi does not divide evenly into 360."
             print "Please provide another value for Delta Phi"
             print "------------------------------------------"
-
-        
+        sysInfo.deltaPhiStatus, sysInfo.numberOfConformers = \
+                                check_deltaPhi_amount(sysInfo)
+        if not sysInfo.deltaPhiStatus:
+            print "\n--------------------------------------------------------"
+            print ("The current delta phi will result in %s" % 
+                   sysInfo.numberOfConformers)
+            print "conformations.  Please provide a larger angle step size." 
+            print "--------------------------------------------------------"     
+    print sysInfo.numberOfConformers
+    exit()
     sysInfo.possibleTorsions = create_possible_torsions(sysInfo.deltaPhi)
     sysInfo.pool = Pool(6)
 
