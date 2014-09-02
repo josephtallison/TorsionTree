@@ -184,20 +184,22 @@ def main_wrapper(torComb):
     if check_close_contacts(atoms):
         return
         
-    #Write file and perform single point analysis
+    #Write file for energy evaluation
     torComb.filename = "new_octane"
     name = TTFiles.make_filename(torComb)
     TTFiles.write_xyz(atoms,torComb.filename)
+    
+    #Perform single point energy evaluation
     torComb.energy = TTEnergy.get_single_point_energy(torComb.filename)
     
     #Check to see if single point energy is above the threshold for minimization
     if torComb.energy > sysInfo.max_energy():
         subprocess.Popen(["rm",torComb.filename])
         return
-    else:
-        print torComb.filename,torComb.energy
         
-    
+    #Perform minimization
+    torComb.min_energy = TTEnergy.get_minimum_energy(torComb.filename)
+    print torComb.filename,torComb.min_energy
     
 if __name__ == '__main__':
     #SET UP DATASTRUCTURES    
